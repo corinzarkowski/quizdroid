@@ -10,6 +10,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.QuizDroid">
         <activity
+            android:name=".AnswerScreen"
+            android:exported="false" />
+        <activity
+            android:name=".QuizScreen"
+            android:exported="false" />
+        <activity
             android:name=".TopicOverview"
             android:exported="false" />
         <activity
