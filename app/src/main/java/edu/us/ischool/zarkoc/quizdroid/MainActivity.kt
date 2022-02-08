@@ -1,8 +1,10 @@
 package edu.us.ischool.zarkoc.quizdroid
 
+import android.app.Application
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 
 const val TOPIC = "edu.us.ischool.zarkoc.quizdroid.topic"
@@ -37,5 +39,63 @@ class MainActivity : AppCompatActivity() {
             }
             startActivity(intentMarvel)
         }
+    }
+}
+
+class QuizApp: Application() {
+    data class Quiz(val question : String, val answers : ArrayList<String>, val correctAnswer : Int)
+    data class Topic(val title : String, val descriptionShort : String, val descriptionLong : String, val questions : ArrayList<Quiz>)
+
+    interface TopicRepository {
+        var quizList : ArrayList<Topic>
+
+        fun getQuestion(questionNum : Int, topic : Int) : Quiz {
+            val curQuestions : ArrayList<Quiz> = quizList.get(topic).questions
+
+            return curQuestions.get(questionNum)
+        }
+
+        fun getTopic(topicIndex : Int) : Topic {
+            return quizList.get(topicIndex)
+        }
+    }
+
+    var curQuiz : Int = -1
+    var curQuestionNum : Int = 0
+
+    class RepositoryImp : TopicRepository {
+        override var quizList: ArrayList<Topic> = arrayListOf<Topic>(
+            Topic("Math", "This is a quick quiz about basic math!", "PLACEHOLDER", arrayListOf<Quiz>(
+                Quiz("2 + 2", arrayListOf<String>(), 0),
+                Quiz("3 + 3", arrayListOf<String>(), 0),
+                Quiz("4!", arrayListOf<String>(), 0),
+                Quiz("447 + 1", arrayListOf<String>(), 0)
+            )),
+            Topic("Physics", "This is a quick quiz about basic math!", "PLACEHOLDER", arrayListOf<Quiz>(
+                Quiz("", arrayListOf<String>(), 0),
+                Quiz("", arrayListOf<String>(), 0),
+                Quiz("", arrayListOf<String>(), 0)
+            )),
+            Topic("Marvel", "This is a quick quiz about basic math!", "PLACEHOLDER", arrayListOf<Quiz>(
+                Quiz("", arrayListOf<String>(), 0),
+                Quiz("", arrayListOf<String>(), 0),
+                Quiz("", arrayListOf<String>(), 0)
+            )),
+        )
+    }
+
+    var repository = RepositoryImp()
+
+    override fun onCreate() {
+        super.onCreate()
+        Log.i("TESTING", "QuizApp Loaded")
+    }
+
+    fun setQuiz(quizNum : Int) {
+        curQuiz = quizNum
+    }
+
+    fun getNextQuestion() : Quiz {
+        return repository.getQuestion(curQuestionNum, curQuiz)
     }
 }
