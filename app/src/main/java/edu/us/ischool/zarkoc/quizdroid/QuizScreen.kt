@@ -6,7 +6,10 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
+
+const val ANSWERGIVEN = "edu.us.ischool.zarkoc.quizdroid.answerGiven"
 
 class QuizScreen : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,15 +20,12 @@ class QuizScreen : AppCompatActivity() {
         var answersCorrect = intent.getIntExtra(ANSWERSCORRECT, 0)
         val answers = intent.getStringArrayListExtra(ANSWERLIST)
         var questionNum = intent.getIntExtra(QUESTIONNUM, 0)
-        val buttonSubmit = findViewById<TextView>(R.id.buttonSubmit)
+
+        val buttonSubmit = findViewById<Button>(R.id.buttonSubmit)
         val questionTitle = findViewById<TextView>(R.id.questionName)
-        val answerTrack = findViewById<TextView>(R.id.answerTrack)
+        val answerGroup = findViewById<RadioGroup>(R.id.answerGroup)
 
         if (questions != null) {
-            if (questionNum + 1 == questions.size) {
-                buttonSubmit.text = "Finish!"
-            }
-
             questionTitle.text = questions.get(questionNum)
         }
 
@@ -38,10 +38,6 @@ class QuizScreen : AppCompatActivity() {
             answer2.text = answers.get(1 + (questionNum * 5))
             answer3.text = answers.get(2 + (questionNum * 5))
             answer4.text = answers.get(3 + (questionNum * 5))
-        }
-
-        if (answers != null) {
-            answerTrack.text = "You have " + answersCorrect + " out of " + questionNum + " correct"
         }
 
         buttonSubmit.setOnClickListener {
@@ -58,16 +54,20 @@ class QuizScreen : AppCompatActivity() {
 
             questionNum += 1
 
-            var intentSubmit : Intent
-            if (buttonSubmit.text == "Finish!") {
-                intentSubmit = Intent(this, MainActivity::class.java)
-            } else {
-                intentSubmit = Intent(this, QuizScreen::class.java).apply {
-                    putExtra(QUESTIONLIST, questions)
-                    putExtra(QUESTIONNUM, questionNum)
-                    putExtra(ANSWERLIST, answers)
-                    putExtra(ANSWERSCORRECT, answersCorrect)
-                }
+            var checkedAnswer : String = when (answerGroup.getCheckedRadioButtonId()) {
+                R.id.answer1 -> "1"
+                R.id.answer2 -> "2"
+                R.id.answer3 -> "3"
+                R.id.answer4 -> "4"
+                else -> "-1"
+            }
+
+            var intentSubmit = Intent(this, AnswerScreen::class.java).apply {
+                putExtra(QUESTIONLIST, questions)
+                putExtra(QUESTIONNUM, questionNum)
+                putExtra(ANSWERLIST, answers)
+                putExtra(ANSWERSCORRECT, answersCorrect)
+                putExtra(ANSWERGIVEN, checkedAnswer)
             }
             startActivity(intentSubmit)
         }
