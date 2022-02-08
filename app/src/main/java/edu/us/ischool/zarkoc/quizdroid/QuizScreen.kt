@@ -9,66 +9,47 @@ import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
 
-const val ANSWERGIVEN = "edu.us.ischool.zarkoc.quizdroid.answerGiven"
 
 class QuizScreen : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_quiz_screen)
 
-        val questions = intent.getStringArrayListExtra(QUESTIONLIST)
-        var answersCorrect = intent.getIntExtra(ANSWERSCORRECT, 0)
-        val answers = intent.getStringArrayListExtra(ANSWERLIST)
-        var questionNum = intent.getIntExtra(QUESTIONNUM, 0)
+        val curQuestion = QuizApp.getNextQuestion()
 
         val buttonSubmit = findViewById<Button>(R.id.buttonSubmit)
         val questionTitle = findViewById<TextView>(R.id.questionName)
         val answerGroup = findViewById<RadioGroup>(R.id.answerGroup)
 
-        if (questions != null) {
-            questionTitle.text = questions.get(questionNum)
-        }
+        questionTitle.text = curQuestion.question
 
         val answer1 = findViewById<RadioButton>(R.id.answer1)
         val answer2 = findViewById<RadioButton>(R.id.answer2)
         val answer3 = findViewById<RadioButton>(R.id.answer3)
         val answer4 = findViewById<RadioButton>(R.id.answer4)
-        if (answers != null) {
-            answer1.text = answers.get(0 + (questionNum * 5))
-            answer2.text = answers.get(1 + (questionNum * 5))
-            answer3.text = answers.get(2 + (questionNum * 5))
-            answer4.text = answers.get(3 + (questionNum * 5))
-        }
+        answer1.text = curQuestion.answers.get(0)
+        answer2.text = curQuestion.answers.get(1)
+        answer3.text = curQuestion.answers.get(2)
+        answer4.text = curQuestion.answers.get(3)
 
         buttonSubmit.setOnClickListener {
-            if (answers != null) {
-                val correctAnswer = answers.get((questionNum * 5) + 4)
-
-                when (correctAnswer) {
-                    "1" -> if (answer1.isChecked) {answersCorrect += 1}
-                    "2" -> if (answer2.isChecked) {answersCorrect += 1}
-                    "3" -> if (answer3.isChecked) {answersCorrect += 1}
-                    "4" -> if (answer4.isChecked) {answersCorrect += 1}
-                }
+            when (curQuestion.correctAnswer) {
+                0 -> if (answer1.isChecked) {QuizApp.updateScore()}
+                1 -> if (answer2.isChecked) {QuizApp.updateScore()}
+                2 -> if (answer3.isChecked) {QuizApp.updateScore()}
+                3 -> if (answer4.isChecked) {QuizApp.updateScore()}
             }
 
-            questionNum += 1
-
-            var checkedAnswer : String = when (answerGroup.getCheckedRadioButtonId()) {
-                R.id.answer1 -> "1"
-                R.id.answer2 -> "2"
-                R.id.answer3 -> "3"
-                R.id.answer4 -> "4"
-                else -> "-1"
+            QuizApp.lastAnswer = when(answerGroup.checkedRadioButtonId) {
+                R.id.answer1 -> curQuestion.answers.get(0)
+                R.id.answer2 -> curQuestion.answers.get(1)
+                R.id.answer3 -> curQuestion.answers.get(2)
+                R.id.answer4 -> curQuestion.answers.get(3)
+                else -> ""
             }
+            QuizApp.lastCorrectAnswer = curQuestion.answers.get(curQuestion.correctAnswer)
 
-            var intentSubmit = Intent(this, AnswerScreen::class.java).apply {
-                putExtra(QUESTIONLIST, questions)
-                putExtra(QUESTIONNUM, questionNum)
-                putExtra(ANSWERLIST, answers)
-                putExtra(ANSWERSCORRECT, answersCorrect)
-                putExtra(ANSWERGIVEN, checkedAnswer)
-            }
+            var intentSubmit = Intent(this, AnswerScreen::class.java)
             startActivity(intentSubmit)
         }
     }
