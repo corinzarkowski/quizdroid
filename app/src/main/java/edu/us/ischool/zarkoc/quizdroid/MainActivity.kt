@@ -1,11 +1,18 @@
 package edu.us.ischool.zarkoc.quizdroid
 
 import android.Manifest
+import android.app.AlertDialog
 import android.app.Application
+import android.app.Dialog
+import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.widget.Button
 import java.io.*
@@ -13,7 +20,39 @@ import androidx.core.app.ActivityCompat
 import android.util.JsonReader
 import android.view.Menu
 import android.view.MenuItem
+import androidx.fragment.app.DialogFragment
+import kotlin.system.exitProcess
 
+class NoConnectionDialogFragment : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return activity?.let {
+            val builder = AlertDialog.Builder(it)
+            builder.setMessage("You have no internet connection!")
+                .setPositiveButton("Exit",
+                    DialogInterface.OnClickListener { dialog, id -> exitProcess(-1) })
+            builder.create()
+        } ?: throw IllegalStateException("Activity cannot be null")
+    }
+}
+
+class AirplaneModeDialogFragment : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return activity?.let {
+            val builder = AlertDialog.Builder(it)
+            builder.setMessage("You have no internet connection! Disable airplane mode?")
+                .setPositiveButton("Yes",
+                    DialogInterface.OnClickListener { dialog, id ->
+                        startActivity(Intent(Settings.ACTION_AIRPLANE_MODE_SETTINGS))
+                    })
+                .setNegativeButton("Exit",
+                    DialogInterface.OnClickListener { dialog, id ->
+                        exitProcess(-1)
+                    })
+            // Create the AlertDialog object and return it
+            builder.create()
+        } ?: throw IllegalStateException("Activity cannot be null")
+    }
+}
 
 class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -56,10 +95,45 @@ class MainActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(
             this,
             arrayOf(
-                Manifest.permission.READ_EXTERNAL_STORAGE
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.ACCESS_NETWORK_STATE,
+                Manifest.permission.ACCESS_WIFI_STATE,
+                Manifest.permission.INTERNET
             ),
             1
         )
+
+        fun isOnline(context: Context): Boolean {
+            val connectivityManager =
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            if (connectivityManager != null) {
+                val capabilities =
+                    connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                if (capabilities != null) {
+                    if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                        Log.i("Internet", "NetworkCapabilities.TRANSPORT_CELLULAR")
+                        return true
+                    } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                        Log.i("Internet", "NetworkCapabilities.TRANSPORT_WIFI")
+                        return true
+                    } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                        Log.i("Internet", "NetworkCapabilities.TRANSPORT_ETHERNET")
+                        return true
+                    }
+                }
+            }
+            return false
+        }
+
+        if (!isOnline(this)) {
+            if (Settings.System.getInt(contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) == 0) {
+                val noConnectionAlert = NoConnectionDialogFragment()
+                noConnectionAlert.show(supportFragmentManager, "no_connection")
+            } else {
+                val airplaneModeAlert = AirplaneModeDialogFragment()
+                airplaneModeAlert.show(supportFragmentManager, "no_connection_airplane")
+            }
+        }
 
         val buttonMath = findViewById<Button>(R.id.quizMath)
         buttonMath.setOnClickListener {
@@ -102,24 +176,6 @@ class QuizApp: Application() {
         }
 
         class RepositoryImp : TopicRepository {
-//            override var quizList : ArrayList<Topic> = arrayListOf<Topic>(
-//                Topic("Math", "This is a quick quiz about basic math!", "PLACEHOLDER", arrayListOf<Quiz>(
-//                    Quiz("2 + 2", arrayListOf<String>("5", "4", "72", "89"), 1),
-//                    Quiz("3 + 3", arrayListOf<String>("6", "4", "9812", "448"), 0),
-//                    Quiz("4!", arrayListOf<String>("24", "42", "442", "22222224"), 0),
-//                    Quiz("447 + 1", arrayListOf<String>("999", "9999", "2", "448"), 3)
-//                )),
-//                Topic("Physics", "This is a quick quiz about basic physics!", "PLACEHOLDER", arrayListOf<Quiz>(
-//                    Quiz("Isaac ______", arrayListOf<String>("Newton", "Dewton", "Pooton", "Gooton"), 0),
-//                    Quiz("9.8 ___", arrayListOf<String>("answers/s", "m/s", "seventy four", "luftballoons"), 1),
-//                    Quiz("Is water wet?", arrayListOf<String>("yes", "no", "maybe", "so"), 2)
-//                )),
-//                Topic("Marvel", "This is a quick quiz about Marvel superheroes!", "PLACEHOLDER", arrayListOf<Quiz>(
-//                    Quiz("Spiderman villain", arrayListOf<String>("Green Gobbler", "Kratos", "Kratom", "Mysterio"), 3),
-//                    Quiz("Infinity stone count", arrayListOf<String>("5", "6", "seventy four", "7"), 1),
-//                    Quiz("Is Kanye in the MCU?", arrayListOf<String>("ooo idk", "possibly?", "yes", "yes but not kanye west"), 2)
-//                )),
-//            )
             override var quizList : ArrayList<Topic> = arrayListOf<Topic>()
         }
 
