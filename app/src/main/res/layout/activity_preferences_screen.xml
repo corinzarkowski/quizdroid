@@ -8,31 +8,19 @@
 
     <EditText
         android:id="@+id/inputURL"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="100dp"
-        android:layout_marginEnd="101dp"
+        android:layout_width="297dp"
+        android:layout_height="43dp"
+        android:layout_marginStart="57dp"
+        android:layout_marginEnd="57dp"
         android:ems="10"
+        android:hint="url..."
         android:inputType="textPersonName"
-        android:text="url..."
+        android:text="https://raw.githubusercontent.com/corinzarkowski/quizdroid/master/app/src/main/data/questions.json"
         android:textAlignment="viewStart"
+        android:textSize="10sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textURL" />
-
-    <EditText
-        android:id="@+id/inputDLTime"
-        android:layout_width="89dp"
-        android:layout_height="47dp"
-        android:layout_marginStart="161dp"
-        android:layout_marginEnd="161dp"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:text="time..."
-        android:textAlignment="viewStart"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textDLTime" />
 
     <TextView
         android:id="@+id/textURL"
@@ -61,5 +49,31 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/inputURL" />
+
+    <EditText
+        android:id="@+id/inputTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="100dp"
+        android:layout_marginEnd="101dp"
+        android:ems="10"
+        android:hint="time (min)..."
+        android:inputType="number"
+        android:text="1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textDLTime" />
+
+    <Button
+        android:id="@+id/buttonDownload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="159dp"
+        android:layout_marginTop="62dp"
+        android:layout_marginEnd="164dp"
+        android:text="Start"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/inputTime" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

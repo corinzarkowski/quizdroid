@@ -20,7 +20,12 @@ import androidx.core.app.ActivityCompat
 import android.util.JsonReader
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.Toast
 import androidx.fragment.app.DialogFragment
+import java.net.URL
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.system.exitProcess
 
 class NoConnectionDialogFragment : DialogFragment() {
@@ -49,6 +54,20 @@ class AirplaneModeDialogFragment : DialogFragment() {
                         exitProcess(-1)
                     })
             // Create the AlertDialog object and return it
+            builder.create()
+        } ?: throw IllegalStateException("Activity cannot be null")
+    }
+}
+
+class DownloadFailedDialogFragment : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return activity?.let {
+            val builder = AlertDialog.Builder(it)
+            builder.setMessage("Download failed!")
+                .setPositiveButton("Retry",
+                    DialogInterface.OnClickListener { dialog, id -> Log.i("TESTING", "retrying")})
+                .setNegativeButton("Exit",
+                    DialogInterface.OnClickListener { dialog, id -> exitProcess(-1) })
             builder.create()
         } ?: throw IllegalStateException("Activity cannot be null")
     }
@@ -133,6 +152,14 @@ class MainActivity : AppCompatActivity() {
                 val airplaneModeAlert = AirplaneModeDialogFragment()
                 airplaneModeAlert.show(supportFragmentManager, "no_connection_airplane")
             }
+        } else {
+            try {
+                Toast.makeText(this, "https://raw.githubusercontent.com/corinzarkowski/quizdroid/master/app/src/main/data/questions.json", Toast.LENGTH_SHORT).show()
+                QuizApp.startNewDownload("https://raw.githubusercontent.com/corinzarkowski/quizdroid/master/app/src/main/data/questions.json", 1, this)
+            } catch (e : Error) {
+                val downloadFailedAlert = DownloadFailedDialogFragment()
+                downloadFailedAlert.show(supportFragmentManager, "download_failed")
+            }
         }
 
         val buttonMath = findViewById<Button>(R.id.quizMath)
@@ -185,6 +212,26 @@ class QuizApp: Application() {
         var curScore : Int = 0
         var lastAnswer : String = ""
         var lastCorrectAnswer : String = ""
+
+        fun startNewDownload(inputUrl: String, inputInterval: Int, con : Context) {
+            if (inputUrl.isNotEmpty() && inputInterval > 0) {
+                var downloadTimer : Timer = Timer()
+                val interval : Long = inputInterval.toLong() * 600000
+
+                downloadTimer.schedule(object : TimerTask() {
+                    override fun run() {
+                        val apiResponse = URL("https://raw.githubusercontent.com/corinzarkowski/quizdroid/master/app/src/main/data/questions.json").readText()
+                        var questionFile = File(con.filesDir.toString() + "/questions.json")
+                        var questionWriter = FileWriter(questionFile)
+                        if (apiResponse.isNotEmpty()) {
+                            questionWriter.write(apiResponse)
+                            questionWriter.close()
+                        }
+
+                    }
+                }, 0, interval)
+            }
+        }
 
         fun getTopicInfo() : Topic {
             return repository.getTopic(curQuiz)
